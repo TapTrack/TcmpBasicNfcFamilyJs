@@ -1,0 +1,28 @@
+{
+    "name": "tappy-basicnfcfamily",
+    "description": "Basic NFC command family for TCMP Tappies",
+    "main": "dist/basicnfc.js",
+    "authors": [
+        "TapTrack"
+    ],
+    "license": "Apache-2.0",
+    "keywords": [
+        "TCMP",
+        "Tappy",
+        "TappyUSB"
+    ],
+    "moduleType": [],
+    "homepage": "",
+    "ignore": [
+        "**/.*",
+        "gulpfile.js",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/TapTrack/TcmpBasicNfcFamilyJs.git"
+    }
+}
