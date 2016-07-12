@@ -31,6 +31,7 @@ describe("Test system family parsing",function() {
         testCmd(Commands.Stop, 0x00);
         testCmd(Commands.ScanTag, 0x02);
         testCmd(Commands.ScanNdef, 0x04);
+        testCmd(Commands.LockTag, 0x08);
         testCmd(Commands.GetLibraryVersion, 0xFF);
     });
 
@@ -81,6 +82,11 @@ describe("Test system family parsing",function() {
         expect(cmd.getLockFlag()).toEqual(true);
         expect([].slice.call(cmd.getMessage())).toEqual([0x54,0x45,0x53,0x54]);
 
+        cmd = new Commands.LockTag(0x02,new Uint8Array([0x01,0x02,0x03,0x04,0x05,0x06,0x07]));
+        expect([].slice.call(cmd.getPayload())).toEqual([0x02,0x07,0x01,0x02,0x03,0x04,0x05,0x06,0x07]);
+        cmd.parsePayload([0x02,0x07,0x01,0x02,0x03,0x04,0x05,0x06,0x07]);
+        expect(cmd.getTimeout()).toEqual(0x02);
+        expect([].slice.call(cmd.getTagCode())).toEqual([0x01,0x02,0x03,0x04,0x05,0x06,0x07]);
     });
 
     it("Test response command codes", function() {
@@ -89,6 +95,7 @@ describe("Test system family parsing",function() {
         testCmd(Responses.TagFound, 0x01);
         testCmd(Responses.ScanTimeout, 0x03);
         testCmd(Responses.NdefFound, 0x02);
+        testCmd(Responses.TagLocked, 0x06);
         testCmd(Responses.ApplicationError, 0x7F);
     });
 
@@ -126,6 +133,12 @@ describe("Test system family parsing",function() {
         expect(cmd.getTagType()).toEqual(0x05);
         expect([].slice.call(cmd.getTagCode())).toEqual([0x54,0x56,0x23,0x99]);
         expect([].slice.call(cmd.getMessage())).toEqual([0x77,0x88,0x99,0x2A]);
+        
+        cmd = new Responses.TagLocked([0x54,0x56,0x23,0x99],0x01);
+        expect([].slice.call(cmd.getPayload())).toEqual([0x01,0x04,0x54,0x56,0x23,0x99]);
+        cmd.parsePayload(new Uint8Array([0x01,0x04,0x54,0x56,0x23,0x99]));
+        expect(cmd.getTagType()).toEqual(0x01);
+        expect([].slice.call(cmd.getTagCode())).toEqual([0x54,0x56,0x23,0x99]);
     });
 
     it("Test command resolver",function(){

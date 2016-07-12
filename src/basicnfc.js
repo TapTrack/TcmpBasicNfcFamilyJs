@@ -78,6 +78,7 @@
         Stop: 0x00,
         ScanTag: 0x02,
         ScanNdef: 0x04,
+        LockTag: 0x08,
         GetLibraryVersion: 0xFF,
     };
 
@@ -191,6 +192,61 @@
     StreamTags.prototype = AbsPollingProto(CommandCodes.StreamTags);
     StreamTags.isTypeOf = typeChecker(CommandCodes.StreamTags);
     c.StreamTags = StreamTags;
+
+    var LockTag = function(timeout,uid) {
+        if(typeof timeout === "number") {
+            this.timeout = timeout;
+        } else {
+            this.timeout = 0x00;
+        }
+
+        if(typeof uid !== "undefined" &&
+                uid !== null) {
+            this.uid = uid;
+        } else {
+            this.uid = new Uint8Array(0);
+        }
+    };
+    LockTag.prototype = AbsProto(CommandCodes.LockTag);
+    LockTag.isTypeOf = typeChecker(CommandCodes.LockTag);
+    LockTag.prototype.getPayload = function() {
+        var uidLength = this.uid.length;
+        var payload = new Uint8Array(1+1+uidLength);
+        payload[0] = this.timeout;
+        payload[1] = uidLength;
+        if (uidLength > 0) {
+            payload.set(this.uid,2);
+        }
+       return payload;
+    };
+    LockTag.prototype.parsePayload = function(payload) {
+        if(payload.length < 2) {
+            throw new Error("Invalid payload: Lock tag command payload must be at least two bytes");
+        } else {
+            this.timeout = payload[0];
+            var uidLength = payload[1];
+            if(uidLength > 0) {
+                if((uidLength + 2) < payload.length) {
+                    this.uid = payload.subarray(2,2+uidLength);
+                }
+            } else {
+                this.uid = new Uint8Array(0);
+            }
+        }
+    };
+    LockTag.prototype.getTimeout = function() {
+        return this.timeout;
+    };
+    LockTag.prototype.setTimeout = function(timeout) {
+        this.timeout = timeout;
+    };
+    LockTag.prototype.getTagCode = function() {
+        return this.uid;
+    };
+    LockTag.prototype.setTagCode = function(uid) {
+        this.uid = uid;
+    };
+    c.LockTag = LockTag;
 
     var Stop = function() {
 
@@ -407,6 +463,7 @@
         TagFound: 0x01,
         ScanTimeout: 0x03,
         NdefFound: 0x02,
+        TagLocked: 0x06,
         ApplicationError: 0x7F,
     };
    
@@ -585,6 +642,62 @@
         this.message = message;
     };
     r.NdefFound = NdefFound;
+
+    var TagLocked = function(tagCode,tagType) {
+        if(typeof tagCode !== "undefined" &&
+                tagCode !== null) {
+            this.uid = tagCode;
+        } else {
+            this.uid = new Uint8Array(0);
+        }
+
+        if(typeof tagType !== "undefined" &&
+                tagType !== null) {
+            this.tagType = tagType;
+        } else {
+            this.tagType = 0x00;
+        }
+    };
+    TagLocked.prototype = AbsProto(ResponseCodes.TagLocked);
+    TagLocked.isTypeOf = typeChecker(ResponseCodes.TagLocked);
+    TagLocked.prototype.getPayload = function() {
+        var payload = new Uint8Array(1+1+this.uid.length);
+        payload[0] = this.tagType;
+        payload[1] = this.uid.length;
+        if(this.uid.length > 0) {
+            payload.set(this.uid,2);
+        }
+
+        return payload;
+    };
+    TagLocked.prototype.parsePayload = function(payload) {
+        if(payload.length < 2) {
+            throw new Error("Tag locked responses must be at least 2 bytes");
+        } else {
+            var uidLength = payload[1];
+            if(uidLength > 0) {
+                if((uidLength+2) < payload.length) {
+                    throw new Error("Tag locked response too short to contain tag code of specified length");
+                } else {
+                    this.uid = payload.subarray(2,2+uidLength);
+                }
+            }
+            this.tagType = payload[0];
+        }
+    };
+    TagLocked.prototype.setTagType = function(tagType) {
+        this.tagType = tagType;
+    };
+    TagLocked.prototype.getTagType = function() {
+        return this.tagType;
+    };
+    TagLocked.prototype.setTagCode = function(uid) {
+        this.uid = uid;
+    };
+    TagLocked.prototype.getTagCode = function() {
+        return this.uid;
+    };
+    r.TagLocked = TagLocked;
     
     r.LibraryVersion = function() {
         if(arguments.length < 2) {
@@ -795,6 +908,10 @@
                     parsed = new c.ScanTag();
                     parsed.parsePayload(cmd.getPayload());
                     break;
+                case CommandCodes.LockTag:
+                    parsed = new c.LockTag();
+                    parsed.parsePayload(cmd.getPayload());
+                    break;
                 case CommandCodes.ScanNdef:
                     parsed = new c.ScanNdef();
                     parsed.parsePayload(cmd.getPayload());
@@ -825,6 +942,9 @@
                     break;
                 case ResponseCodes.ScanTimeout:
                     constructor = r.ScanTimeout;
+                    break;
+                case ResponseCodes.TagLocked:
+                    constructor = r.TagLocked;
                     break;
                 case ResponseCodes.LibraryVersion:
                     constructor = r.LibraryVersion;
