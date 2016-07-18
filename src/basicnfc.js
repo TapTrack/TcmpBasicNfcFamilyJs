@@ -226,8 +226,10 @@
             this.timeout = payload[0];
             var uidLength = payload[1];
             if(uidLength > 0) {
-                if((uidLength + 2) < payload.length) {
+                if((uidLength + 2) <= payload.length) {
                     this.uid = payload.subarray(2,2+uidLength);
+                } else {
+                    throw new Error("Invalid payload: lock tag payload too short to contain UID length claimed");
                 }
             } else {
                 this.uid = new Uint8Array(0);
