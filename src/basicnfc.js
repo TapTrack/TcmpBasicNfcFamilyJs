@@ -263,9 +263,9 @@
         }
 
         if(typeof lock === "undefined") {
-            this.lock = false;
+            this.locks = false;
         } else {
-            this.lock = lock;
+            this.locks = lock;
         }
 
         if(typeof text === "undefined") {
@@ -280,7 +280,7 @@
         var textBytes = stringToBytes(this.text);
         var payload = new Uint8Array(textBytes.length+2);
         payload[0] = this.timeout;
-        payload[1] = this.lock ? 0x01 : 0x00;
+        payload[1] = this.locks ? 0x01 : 0x00;
         payload.set(textBytes,2);
         return payload;
     };
@@ -305,10 +305,10 @@
         this.timeout = timeout;
     };
     WriteNdefText.prototype.getLockFlag = function() {
-        return this.lock;
+        return this.locks;
     };
     WriteNdefText.prototype.setLockFlag = function(locks) {
-        this.lock = locks;
+        this.locks = locks;
     };
     WriteNdefText.prototype.getText = function() {
         return this.text;
@@ -326,9 +326,9 @@
         }
 
         if(typeof lock === "undefined") {
-            this.lock = false;
+            this.locks = false;
         } else {
-            this.lock = lock;
+            this.locks = lock;
         }
 
         if(typeof uri === "undefined") {
@@ -349,7 +349,7 @@
         var uriBytes = stringToBytes(this.uri);
         var payload = new Uint8Array(uriBytes.length+3);
         payload[0] = this.timeout;
-        payload[1] = this.lock ? 0x01 : 0x00;
+        payload[1] = this.locks ? 0x01 : 0x00;
         payload[2] = this.uriCode;
         payload.set(uriBytes,3);
         return payload;
@@ -376,10 +376,10 @@
         this.timeout = timeout;
     };
     WriteNdefUri.prototype.getLockFlag = function() {
-        return this.lock;
+        return this.locks;
     };
     WriteNdefUri.prototype.setLockFlag = function(locks) {
-        this.lock = locks;
+        this.locks = locks;
     };
     WriteNdefUri.prototype.getUri = function() {
         return this.uri;
@@ -403,9 +403,9 @@
         }
 
         if(typeof lock === "undefined") {
-            this.lock = false;
+            this.locks = false;
         } else {
-            this.lock = lock;
+            this.locks = lock;
         }
 
         if(typeof msg === "undefined") {
@@ -419,7 +419,7 @@
     WriteNdefCustom.prototype.getPayload = function() {
         var payload = new Uint8Array(this.msg.length+2);
         payload[0] = this.timeout;
-        payload[1] = this.lock ? 0x01 : 0x00;
+        payload[1] = this.locks ? 0x01 : 0x00;
         payload.set(this.msg,2);
         return payload;
     };
@@ -443,10 +443,10 @@
         this.timeout = timeout;
     };
     WriteNdefCustom.prototype.getLockFlag = function() {
-        return this.lock;
+        return this.locks;
     };
     WriteNdefCustom.prototype.setLockFlag = function(locks) {
-        this.lock = locks;
+        this.locks = locks;
     };
     WriteNdefCustom.prototype.getMessage = function() {
         return this.msg;
