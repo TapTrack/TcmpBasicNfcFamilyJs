@@ -33,6 +33,9 @@ describe("Test system family parsing",function() {
         testCmd(Commands.ScanNdef, 0x04);
         testCmd(Commands.LockTag, 0x08);
         testCmd(Commands.GetLibraryVersion, 0xFF);
+        testCmd(Commands.EmulateNdefText, 0x09);
+        testCmd(Commands.EmulateNdefUri, 0x0A);
+        testCmd(Commands.EmulateNdefCustom, 0x0B);
     });
 
     it("Test command payloads",function() {
@@ -81,6 +84,28 @@ describe("Test system family parsing",function() {
         expect(cmd.getTimeout()).toEqual(0x01);
         expect(cmd.getLockFlag()).toEqual(true);
         expect([].slice.call(cmd.getMessage())).toEqual([0x54,0x45,0x53,0x54]);
+        
+        cmd = new Commands.EmulateNdefText(0x01,0x07,"TEST");
+        expect([].slice.call(cmd.getPayload())).toEqual([0x01,0x07,0x54,0x45,0x53,0x54]);
+        cmd.parsePayload([0x01,0x05,0x54,0x45,0x53,0x54]);
+        expect(cmd.getTimeout()).toEqual(0x01);
+        expect(cmd.getMaxScans()).toEqual(0x05);
+        expect(cmd.getText()).toEqual("TEST");
+        
+        cmd = new Commands.EmulateNdefUri(0x01,0x07,"TEST",0x05);
+        expect([].slice.call(cmd.getPayload())).toEqual([0x01,0x07,0x05,0x54,0x45,0x53,0x54]);
+        cmd.parsePayload([0x01,0x05,0x05,0x54,0x45,0x53,0x54]);
+        expect(cmd.getTimeout()).toEqual(0x01);
+        expect(cmd.getMaxScans()).toEqual(0x05);
+        expect(cmd.getUri()).toEqual("TEST");
+        expect(cmd.getUriCode()).toEqual(0x05);
+        
+        cmd = new Commands.EmulateNdefCustom(0x01,0x07,[0x54,0x45,0x53,0x54]);
+        expect([].slice.call(cmd.getPayload())).toEqual([0x01,0x07,0x54,0x45,0x53,0x54]);
+        cmd.parsePayload([0x01,0x05,0x54,0x45,0x53,0x54]);
+        expect(cmd.getTimeout()).toEqual(0x01);
+        expect(cmd.getMaxScans()).toEqual(0x05);
+        expect([].slice.call(cmd.getMessage())).toEqual([0x54,0x45,0x53,0x54]);
 
         cmd = new Commands.LockTag(0x02,new Uint8Array([0x01,0x02,0x03,0x04,0x05,0x06,0x07]));
         expect([].slice.call(cmd.getPayload())).toEqual([0x02,0x07,0x01,0x02,0x03,0x04,0x05,0x06,0x07]);
@@ -96,6 +121,8 @@ describe("Test system family parsing",function() {
         testCmd(Responses.ScanTimeout, 0x03);
         testCmd(Responses.NdefFound, 0x02);
         testCmd(Responses.TagLocked, 0x06);
+        testCmd(Responses.EmulationScanSuccess, 0x07);
+        testCmd(Responses.EmulationComplete, 0x08);
         testCmd(Responses.ApplicationError, 0x7F);
     });
 
@@ -139,6 +166,12 @@ describe("Test system family parsing",function() {
         cmd.parsePayload(new Uint8Array([0x01,0x04,0x54,0x56,0x23,0x99]));
         expect(cmd.getTagType()).toEqual(0x01);
         expect([].slice.call(cmd.getTagCode())).toEqual([0x54,0x56,0x23,0x99]);
+        
+        cmd = new Responses.EmulationComplete(0x01,500);
+        expect([].slice.call(cmd.getPayload())).toEqual([0x01,0x01,0xF4]);
+        cmd.parsePayload(new Uint8Array([0x02,0x41,0x24]));
+        expect(cmd.getReasonCode()).toEqual(0x02);
+        expect(cmd.getScanCount()).toEqual(16676);
     });
 
     it("Test command resolver",function(){

@@ -73,6 +73,9 @@
         WriteNdefUri: 0x05,
         WriteNdefText: 0x06,
         WriteNdefCustom: 0x07,
+        EmulateNdefText: 0x09,
+        EmulateNdefUri: 0x0A,
+        EmulateNdefCustom: 0x0B,
         StreamTags: 0x01,
         StreamNdef: 0x03,
         Stop: 0x00,
@@ -457,6 +460,208 @@
         this.msg = msg;
     };
     c.WriteNdefCustom = WriteNdefCustom;
+    
+    var EmulateNdefText = function(timeout, maxScans, text) {
+        if(typeof timeout === "undefined") {
+            this.timeout = 0x00;
+        } else {
+            this.timeout = timeout;
+        }
+
+        if(typeof maxScans === "undefined") {
+            this.maxScans = 0x00;
+        } else {
+            this.maxScans = maxScans;
+        }
+
+        if(typeof text === "undefined") {
+            this.text = "";
+        } else {
+            this.text = text;
+        }
+    };
+    EmulateNdefText.prototype = AbsProto(CommandCodes.EmulateNdefText);
+    EmulateNdefText.isTypeOf = typeChecker(CommandCodes.EmulateNdefText);
+    EmulateNdefText.prototype.getPayload = function() {
+        var textBytes = stringToBytes(this.text);
+        var payload = new Uint8Array(textBytes.length+2);
+        payload[0] = this.timeout;
+        payload[1] = this.maxScans;
+        payload.set(textBytes,2);
+        return payload;
+    };
+    EmulateNdefText.prototype.parsePayload = function(payload) {
+        if(payload.length < 2) {
+            throw new Error("Invalid payload: emulate ndef text must be at least 2 bytes long");
+        } else {
+            this.timeout = payload[0];
+            this.maxScans = payload[1];
+            if(payload.length > 2) {
+                var textBytes = payload.slice(2);
+                this.text = bytesToString(textBytes);
+            } else {
+                this.text = "";
+            }
+        }
+    };
+    EmulateNdefText.prototype.getTimeout = function() {
+        return this.timeout;
+    };
+    EmulateNdefText.prototype.setTimeout = function(timeout) {
+        this.timeout = timeout;
+    };
+    EmulateNdefText.prototype.getMaxScans = function() {
+        return this.maxScans;
+    };
+    EmulateNdefText.prototype.setMaxScans = function(maxScans) {
+        this.maxScans = maxScans;
+    };
+    EmulateNdefText.prototype.getText = function() {
+        return this.text;
+    };
+    EmulateNdefText.prototype.setText = function(text) {
+        this.text = text;
+    };
+    c.EmulateNdefText = EmulateNdefText;
+    
+    var EmulateNdefUri = function(timeout, maxScans, uri, uriCode) {
+        if(typeof timeout === "undefined") {
+            this.timeout = 0x00;
+        } else {
+            this.timeout = timeout;
+        }
+
+        if(typeof maxScans === "undefined") {
+            this.maxScans = 0x00;
+        } else {
+            this.maxScans = maxScans;
+        }
+
+        if(typeof uri === "undefined") {
+            this.uri = "";
+        } else {
+            this.uri = uri;
+        }
+
+        if(typeof uriCode === "undefined") {
+            this.uriCode = 0x00;
+        } else {
+            this.uriCode = uriCode;
+        }
+    };
+    EmulateNdefUri.prototype = AbsProto(CommandCodes.EmulateNdefUri);
+    EmulateNdefUri.isTypeOf = typeChecker(CommandCodes.EmulateNdefUri);
+    EmulateNdefUri.prototype.getPayload = function() {
+        var uriBytes = stringToBytes(this.uri);
+        var payload = new Uint8Array(uriBytes.length+3);
+        payload[0] = this.timeout;
+        payload[1] = this.maxScans;
+        payload[2] = this.uriCode;
+        payload.set(uriBytes,3);
+        return payload;
+    };
+    EmulateNdefUri.prototype.parsePayload = function(payload) {
+        if(payload.length < 3) {
+            throw new Error("Invalid payload: eumulate ndef uri must be at least 3 bytes long");
+        } else {
+            this.timeout = payload[0];
+            this.maxScans = (payload[1]);
+            this.uriCode = payload[2];
+
+            if(payload.length > 3) {
+                var uriBytes = payload.slice(3);
+                this.uri = bytesToString(uriBytes);
+            } else {
+                this.uri = "";
+            }
+        }
+    };
+    EmulateNdefUri.prototype.getTimeout = function() {
+        return this.timeout;
+    };
+    EmulateNdefUri.prototype.setTimeout = function(timeout) {
+        this.timeout = timeout;
+    };
+    EmulateNdefUri.prototype.getMaxScans = function() {
+        return this.maxScans;
+    };
+    EmulateNdefUri.prototype.setMaxScans = function(maxScans) {
+        this.maxScans = maxScans;
+    };
+    EmulateNdefUri.prototype.getUriCode = function() {
+        return this.uriCode;
+    };
+    EmulateNdefUri.prototype.setUriCode = function(uriCode) {
+        this.uriCode = uriCode;
+    };
+    EmulateNdefUri.prototype.getUri = function() {
+        return this.uri;
+    };
+    EmulateNdefUri.prototype.setUri = function(uri) {
+        this.uri = uri;
+    };
+    c.EmulateNdefUri = EmulateNdefUri;
+    
+    var EmulateNdefCustom = function(timeout, maxScans, msg) {
+        if(typeof timeout === "undefined") {
+            this.timeout = 0x00;
+        } else {
+            this.timeout = timeout;
+        }
+
+        if(typeof maxScans === "undefined") {
+            this.maxScans = 0x00;
+        } else {
+            this.maxScans = maxScans;
+        }
+
+        if(typeof msg === "undefined") {
+            this.msg = new Uint8Array(0);
+        } else {
+            this.msg = msg;
+        }
+    };
+    EmulateNdefCustom.prototype = AbsProto(CommandCodes.EmulateNdefCustom);
+    EmulateNdefCustom.isTypeOf = typeChecker(CommandCodes.EmulateNdefCustom);
+    EmulateNdefCustom.prototype.getPayload = function() {
+        var payload = new Uint8Array(2+this.msg.length);
+        payload[0] = this.timeout;
+        payload[1] = this.maxScans;
+        payload.set(this.msg,2);
+        return payload;
+    };
+    EmulateNdefCustom.prototype.parsePayload = function(payload) {
+        if(payload.length < 2) {
+            throw new Error("Invalid payload: emulate ndef custom must be at least 2 bytes long");
+        } else {
+            this.timeout = payload[0];
+            this.maxScans = payload[1];
+            if(payload.length > 2) {
+                this.msg = payload.slice(2);
+            } else {
+                this.msg = new Uint8Array(0);
+            }
+        }
+    };
+    EmulateNdefCustom.prototype.getTimeout = function() {
+        return this.timeout;
+    };
+    EmulateNdefCustom.prototype.setTimeout = function(timeout) {
+        this.timeout = timeout;
+    };
+    EmulateNdefCustom.prototype.getMaxScans = function() {
+        return this.maxScans;
+    };
+    EmulateNdefCustom.prototype.setMaxScans = function(maxScans) {
+        this.maxScans = maxScans;
+    };
+    EmulateNdefCustom.prototype.getMessage = function() {
+        return this.msg;
+    };
+    EmulateNdefCustom.prototype.setMessage = function(msg) {
+        this.msg = msg;
+    };
+    c.EmulateNdefCustom = EmulateNdefCustom;
 
     var r = {};
     var ResponseCodes = {
@@ -467,6 +672,8 @@
         NdefFound: 0x02,
         TagLocked: 0x06,
         ApplicationError: 0x7F,
+        EmulationScanSuccess: 0x07,
+        EmulationComplete: 0x08
     };
    
     var TagWritten = function(tagCode,tagType) {
@@ -575,6 +782,13 @@
     ScanTimeout.prototype = AbsProto(ResponseCodes.ScanTimeout);
     ScanTimeout.isTypeOf = typeChecker(ResponseCodes.ScanTimeout);
     r.ScanTimeout = ScanTimeout;
+    
+    var EmulationScanSuccess = function() {
+
+    };
+    EmulationScanSuccess.prototype = AbsProto(ResponseCodes.EmulationScanSuccess);
+    EmulationScanSuccess.isTypeOf = typeChecker(ResponseCodes.EmulationScanSuccess);
+    r.EmulationScanSuccess = EmulationScanSuccess;
     
     var NdefFound = function(tagCode,tagType,message) {
         if(typeof tagCode !== "undefined") {
@@ -735,6 +949,55 @@
     };
     r.LibraryVersion.prototype.setMinorVersion = function(ver) {
         this.minorVersion = ver;
+    };
+    
+    r.EmulationComplete = function(reasonCode, scanCount) {
+        if(typeof reasonCode === "undefined") {
+            this.reasonCode = 0x00;
+        } else {
+            this.reasonCode = reasonCode;
+        }
+        
+        if(typeof scanCount === "undefined") {
+            this.scanCount = 0x00;
+        } else {
+            this.scanCount = scanCount;
+        }
+    };
+    r.EmulationComplete.prototype = AbsProto(ResponseCodes.EmulationComplete);
+    r.EmulationComplete.isTypeOf = typeChecker(ResponseCodes.EmulationComplete);
+    r.EmulationComplete.prototype.getPayload = function() {
+        var payload = new Uint8Array(3);
+        payload[0] = this.reasonCode;
+        payload[1] = (this.scanCount >> 8);
+        payload[2] = this.scanCount;
+        return payload;
+    };
+    r.EmulationComplete.prototype.parsePayload = function(payload) {
+        if(payload.length < 2) {
+            throw new Error("Firmware version responses must be at least 2 bytes");
+        }
+        else {
+            this.reasonCode = payload[0];
+            this.scanCount = ((payload[1] << 8) | payload[2]);
+        }
+    };
+    r.EmulationComplete.prototype.getReasonCode = function() {
+        return this.reasonCode;
+    };
+    r.EmulationComplete.prototype.getScanCount = function() {
+        return this.scanCount;
+    };
+    r.EmulationComplete.prototype.setReasonCode = function(reason) {
+        this.reasonCode = reason;
+    };
+    r.EmulationComplete.prototype.setScanCount = function(scanCount) {
+        this.scanCount = scanCount;
+    };
+    r.EmulationComplete.ReasonCodes = {
+        TIMEOUT: 0x01, // timeout was reached
+        MAX_SCANS: 0x02, // max scan count was reached
+        NEW_COMMAND: 0x03 // the tappy received a command cancelling emulation
     };
 
     r.ApplicationError = function() {
@@ -918,6 +1181,18 @@
                     parsed = new c.ScanNdef();
                     parsed.parsePayload(cmd.getPayload());
                     break;
+                case CommandCodes.EmulateNdefText:
+                    parsed = new c.EmulateNdefText();
+                    parsed.parsePayload(cmd.getPayload());
+                    break;
+                case CommandCodes.EmulateNdefUri:
+                    parsed = new c.EmulateNdefUri();
+                    parsed.parsePayload(cmd.getPayload());
+                    break;
+                case CommandCodes.EmulateNdefCustom:
+                    parsed = new c.EmulateNdefCustom();
+                    parsed.parsePayload(cmd.getPayload());
+                    break;
                 case CommandCodes.GetLibraryVersion:
                     parsed = new c.GetLibraryVersion();
                     parsed.parsePayload(cmd.getPayload());
@@ -947,6 +1222,12 @@
                     break;
                 case ResponseCodes.TagLocked:
                     constructor = r.TagLocked;
+                    break;
+                case ResponseCodes.EmulationComplete:
+                    constructor = r.EmulationComplete;
+                    break;
+                case ResponseCodes.EmulationScanSuccess:
+                    constructor = r.EmulationScanSuccess;
                     break;
                 case ResponseCodes.LibraryVersion:
                     constructor = r.LibraryVersion;
