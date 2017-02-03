@@ -16,10 +16,7 @@ npm install @taptrack/tappy-basicnfcfamily
 var BasicNfc = require('tappy-basicnfcfamily');
 var Commands = BasicNfc.Commands;
 
-// Request that the tappy return the version of the BasicNfc
-// library that it supports
-var getLibraryVersion = new Commands.GetLibraryVersion();
-
+// Tag Detection Commands
 
 // All scan/stream commands take two parameters:
 // timeout: number of seconds to scan for, 0 disables max 255
@@ -38,8 +35,8 @@ var streamTags = new Commands.StreamTags(timeout);
 var scanNdef = new Commands.ScanNdef(timeout,BasicNfc.PollingModes.MODE_GENERAL);
 var streamNdef = new Commands.StreamNdef(timeout);
 
+// Tag Writing Commands
 
-// Write data to the next tag that the Tappy encounters
 // All write commands have the same first two parameters:
 // timeout: number of seconds to wait for a tag to be presented, 0->255
 // lock: boolean determining if the tag should be locked after writing
@@ -59,10 +56,42 @@ var writeText = new Commands.WriteNdefText(timeout,lockTag,textData);
 // the uri data parameter contains the full uri without the prefix
 var writeUri = new Commands.WriteNdefUri(timeout,lockTag,uri,uriCode);
 
+// Tag Emulation Commands
+
+// Emulation commands cause the Tappy to emulate a type 4 tag containing
+// user-specified NDEF data.
+// All emulate commands have the same first two parameters:
+// timeout: number of seconds to emulate for, 0->255 (0 disables)
+// maxScans: number of scans to emulate for, 0->255 (0 disables)
+
+// Causes the Tappy to emulate a type 4 tag containing a user-defined
+// NDEF message. The ndefData parameter should be a Uint8Array containing
+// all the bytes of a full NDEF message, excluding any tag technology-specific
+// information
+var emulateCustom = new Commands.EmulateNdefCustom(timeout,maxScans, ndefData);
+
+// Causes the Tappy to emulate a type 4 tag containing an NDEF message
+// with a single text record. 
+// The textData should be a string containing the text you wish the
+// emulated record to contain
+var emulateText = new Commands.EmulateNdefText(timeout,maxScans,textData);
+
+// Causes the Tappy to emulate a type 4 tag containing an NDEF message
+// with a single URI record. 
+// The last data parameter is an NDEF URI record prefix code, while
+// the uri data parameter contains the full uri without the prefix
+var emulateUri = new Commands.EmulateNdefUri(timeout,maxScans,uri,uriCode);
+
+// Utility Commands
 
 // Cancel any operation. Primarily used for stopping operations with a 
 // long timeout or indefinite timeout
 var stop = new Commands.Stop();
+
+// Request that the tappy return the version of the BasicNfc
+// library that it supports
+var getLibraryVersion = new Commands.GetLibraryVersion();
+
 
 ```
 
@@ -72,6 +101,8 @@ purposes. in practise, please use the resolver described later to convert
 raw tcmp messages received from the tappy into their corresponding concrete
 response types with the payloads parsed appropriately.
 ```javascript
+// Utility Responses
+
 // An error occured during a BasicNfc operation, has methods
 var applicationError = new Responses.ApplicationError();
 // retrieve the command family-specific error code as per BasicNfc.ErrorCodes 
@@ -88,6 +119,8 @@ applicationError.getErrorMessage();
 var libVersion = new Responses.LibraryVersion();
 libVersion.getMajorVersion();
 libVersion.getMinorVersion();
+
+// Tag Detection Responses
 
 // Response notifying the client of an Ndef-containing tag being detected
 var ndefFound = new Responses.NdefFound();
@@ -109,12 +142,30 @@ tagFound.getTagType();
 // retrieve Uint8Array of the tag's UID
 tagFound.getTagCode();
 
+// Tag Writing Responses
+
 // Response notifying the client that a tag was successfully written
 var tagWritten = new Responses.TagWritten();
 // retrieve Tappy standard tag type code
 tagWritten.getTagType();
 // retrieve Uint8Array of the tag's UID
 tagWritten.getTagCode();
+
+// Tag Emulation Responses
+
+// Response notifying that someone has scanned the emulated tag
+var emulationScanSuccess = new Responses.EmulationScanSuccess()
+
+// Response notifying that emulation has ended 
+var emulationComplete = new Responses.EmulationComplete();
+// retrieve the reason emulation completed, the
+// value is a single byte as below:
+// 0x01: timeout reached 
+// 0x02: max scans reached
+// 0x03: new instruction was received
+emulationComplete.getReasonCode();
+// retrieve the number of times the emulated tag was scanned
+emulationComplete.getScanCount();
 
 ```
 
