@@ -12,7 +12,7 @@ NPM
 npm install @taptrack/tappy-basicnfcfamily
 ```
 ## Commands
-```
+```javascript
 var BasicNfc = require('tappy-basicnfcfamily');
 var Commands = BasicNfc.Commands;
 
