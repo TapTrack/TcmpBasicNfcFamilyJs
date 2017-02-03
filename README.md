@@ -1,5 +1,5 @@
 Tappy Communication Messaging Protocol (TCMP) commany family for
-performing basic tag detection, reading, and writing operations. 
+performing basic tag detection, reading, emulating, and writing operations. 
 
 ## Installation
 Bower
